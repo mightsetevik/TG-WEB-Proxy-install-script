@@ -27,14 +27,14 @@
 Интерактивный режим:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mightsetevik/TG-WEB-Proxy-install-script/main/install-telemt-web.sh \
+curl -fsSL https://github.com/mightsetevik/TG-WEB-Proxy-install-script/raw/refs/heads/main/install-telemt-web.sh \
   | sudo bash
 ```
 
 Неинтерактивный режим:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mightsetevik/TG-WEB-Proxy-install-script/main/install-telemt-web.sh \
+curl -fsSL https://github.com/mightsetevik/TG-WEB-Proxy-install-script/raw/refs/heads/main/install-telemt-web.sh \
   | sudo bash -s -- \
   --domain proxy.example.com \
   --email admin@example.com \
