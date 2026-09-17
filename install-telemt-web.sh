@@ -215,7 +215,6 @@ install_telemt() {
   base_url="https://github.com/$TELEMT_REPO/releases/download/$TELEMT_VERSION"
   archive="$(mktemp)"
   checksum="$(mktemp)"
-  trap 'rm -f "$archive" "$checksum"' RETURN
   log "Загрузка Telemt $TELEMT_VERSION ($arch/$libc)"
   curl -fsSL --retry 3 "$base_url/$asset" -o "$archive"
   curl -fsSL --retry 3 "$base_url/$asset.sha256" -o "$checksum"
@@ -226,6 +225,7 @@ install_telemt() {
   tar -xzf "$archive" -C "$extracted"
   install -m 0755 "$(find "$extracted" -type f -name telemt -print -quit)" /usr/local/bin/telemt
   rm -rf "$extracted"
+  rm -f "$archive" "$checksum"
 }
 
 generate_secrets() {
