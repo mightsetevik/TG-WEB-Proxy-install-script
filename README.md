@@ -22,25 +22,20 @@
 - домен, уже указывающий на VPS;
 - свободные TCP-порты `80` и `443`.
 
-## Установка
-
-```bash
-chmod +x install-telemt-web.sh
-sudo ./install-telemt-web.sh \
-  --domain proxy.example.com \
-  --email admin@example.com
-```
+## Установка Через GitHub
 
 Интерактивный режим:
 
 ```bash
-sudo ./install-telemt-web.sh
+curl -fsSL https://raw.githubusercontent.com/mightsetevik/TG-WEB-Proxy-install-script/main/install-telemt-web.sh \
+  | sudo bash
 ```
 
-Последняя версия Telemt:
+Неинтерактивный режим:
 
 ```bash
-sudo ./install-telemt-web.sh \
+curl -fsSL https://raw.githubusercontent.com/mightsetevik/TG-WEB-Proxy-install-script/main/install-telemt-web.sh \
+  | sudo bash -s -- \
   --domain proxy.example.com \
   --email admin@example.com \
   --telemt-version latest
@@ -50,25 +45,6 @@ sudo ./install-telemt-web.sh \
 
 ```text
 /root/telemt-web-credentials-<домен>.txt
-```
-
-## Запуск Через GitHub
-
-Публичный репозиторий можно запустить одной командой:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/mightsetevik/TG-WEB-Proxy-install-script/main/install-telemt-web.sh \
-  | sudo bash -s -- \
-    --domain proxy.example.com \
-    --email admin@example.com
-```
-
-Безопаснее сначала скачать и просмотреть скрипт:
-
-```bash
-curl -fsSLO https://raw.githubusercontent.com/mightsetevik/TG-WEB-Proxy-install-script/main/install-telemt-web.sh
-less install-telemt-web.sh
-sudo bash install-telemt-web.sh --domain proxy.example.com --email admin@example.com
 ```
 
 Не запускайте непроверенные удалённые скрипты с правами root. Для production лучше использовать URL конкретного проверенного commit или release tag, а не `main`.
