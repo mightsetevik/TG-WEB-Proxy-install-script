@@ -104,8 +104,9 @@ prompt_values() {
   if (( NON_INTERACTIVE )); then
     [[ -n "$DOMAIN" && -n "$EMAIL" ]] || die "В --non-interactive обязательны --domain и --email"
   else
-    if [[ -z "$DOMAIN" ]]; then read -r -p "Публичный домен: " DOMAIN; fi
-    if [[ -z "$EMAIL" ]]; then read -r -p "Email для ACME: " EMAIL; fi
+    [[ -r /dev/tty ]] || die "Интерактивный режим требует TTY; используйте --domain и --email"
+    if [[ -z "$DOMAIN" ]]; then read -r -p "Публичный домен: " DOMAIN </dev/tty; fi
+    if [[ -z "$EMAIL" ]]; then read -r -p "Email для ACME: " EMAIL </dev/tty; fi
   fi
   valid_domain "$DOMAIN" || die "Недопустимый домен: $DOMAIN"
   valid_email "$EMAIL" || die "Недопустимый email: $EMAIL"
@@ -162,7 +163,7 @@ check_dns() {
   fi
   warn "$DOMAIN не указывает на определённый публичный IP $PUBLIC_IP"
   (( NON_INTERACTIVE )) && die "Исправьте DNS или передайте правильный --public-ip"
-  read -r -p "Продолжить? [y/N] " answer
+  read -r -p "Продолжить? [y/N] " answer </dev/tty
   [[ "$answer" == [yY] ]] || die "Операция отменена"
 }
 
