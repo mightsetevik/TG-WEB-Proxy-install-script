@@ -413,6 +413,9 @@ EOF
 Версия Telemt: $TELEMT_VERSION
 Файл с реквизитами: $secret_file
 
+Ссылка для подключения Telegram WEB proxy:
+tg://webproxy?server=$DOMAIN&secret=dd$PROXY_SECRET
+
 Проверка сервисов:
   systemctl status telemt caddy
   journalctl -u telemt -f
