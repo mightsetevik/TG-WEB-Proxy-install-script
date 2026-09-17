@@ -31,18 +31,18 @@ die() { printf '[ERROR] %s\n' "$*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
-Usage:
+Использование:
   sudo ./install-telemt-web.sh --domain proxy.example.com --email admin@example.com
 
-Options:
-  --domain NAME             Public FQDN for the WEB proxy
-  --email ADDRESS           ACME certificate contact address
-  --telemt-version VERSION  Release tag, default: 3.5.7; use latest explicitly
-  --ssh-port PORT           SSH port to allow in UFW, default: 22
-  --public-ip ADDRESS       Public IPv4 used in Telemt public_addr
-  --non-interactive         Require domain and email arguments
-  --force                   Replace this install after creating a timestamped backup
-  -h, --help                Show this help
+Параметры:
+  --domain NAME             Публичный FQDN WEB-прокси
+  --email ADDRESS           Email для сертификата ACME
+  --telemt-version VERSION  Версия релиза, по умолчанию: 3.5.7; latest для последней
+  --ssh-port PORT           SSH-порт для UFW, по умолчанию: 22
+  --public-ip ADDRESS       Публичный IPv4 для public_addr Telemt
+  --non-interactive         Требовать domain и email в параметрах
+  --force                   Заменить установку после резервного копирования
+  -h, --help                Показать эту справку
 EOF
 }
 
@@ -62,64 +62,64 @@ parse_args() {
   while (($#)); do
     case "$1" in
       --domain)
-        (($# >= 2)) || die "--domain requires a value"
+        (($# >= 2)) || die "Для --domain требуется значение"
         DOMAIN="$2"; shift 2
         ;;
       --email)
-        (($# >= 2)) || die "--email requires a value"
+        (($# >= 2)) || die "Для --email требуется значение"
         EMAIL="$2"; shift 2
         ;;
       --telemt-version)
-        (($# >= 2)) || die "--telemt-version requires a value"
+        (($# >= 2)) || die "Для --telemt-version требуется значение"
         TELEMT_VERSION="$2"; shift 2
         ;;
       --ssh-port)
-        (($# >= 2)) || die "--ssh-port requires a value"
+        (($# >= 2)) || die "Для --ssh-port требуется значение"
         SSH_PORT="$2"; shift 2
         ;;
       --public-ip)
-        (($# >= 2)) || die "--public-ip requires a value"
+        (($# >= 2)) || die "Для --public-ip требуется значение"
         PUBLIC_IP="$2"; shift 2
         ;;
       --non-interactive) NON_INTERACTIVE=1; shift ;;
       --force) FORCE=1; shift ;;
       -h|--help) usage; exit 0 ;;
-      *) die "Unknown argument: $1" ;;
+      *) die "Неизвестный аргумент: $1" ;;
     esac
   done
 }
 
 require_root() {
-  (( EUID == 0 )) || die "Run as root or with sudo"
-  [[ -d /run/systemd/system ]] || die "systemd is required"
-  [[ -r /etc/os-release ]] || die "Cannot identify the operating system"
+  (( EUID == 0 )) || die "Запустите от root или через sudo"
+  [[ -d /run/systemd/system ]] || die "Требуется systemd"
+  [[ -r /etc/os-release ]] || die "Не удалось определить операционную систему"
   # shellcheck disable=SC1091
   source /etc/os-release
   [[ "${ID:-}" == debian || "${ID:-}" == ubuntu || "${ID_LIKE:-}" == *debian* ]] || \
-    die "Supported systems are Debian and Ubuntu"
-  [[ "${VERSION_CODENAME:-}" != "" || "${VERSION_ID:-}" != "" ]] || die "Unsupported OS metadata"
+    die "Поддерживаются Debian и Ubuntu"
+  [[ "${VERSION_CODENAME:-}" != "" || "${VERSION_ID:-}" != "" ]] || die "Не удалось прочитать данные ОС"
 }
 
 prompt_values() {
   if (( NON_INTERACTIVE )); then
-    [[ -n "$DOMAIN" && -n "$EMAIL" ]] || die "--domain and --email are required with --non-interactive"
+    [[ -n "$DOMAIN" && -n "$EMAIL" ]] || die "В --non-interactive обязательны --domain и --email"
   else
-    if [[ -z "$DOMAIN" ]]; then read -r -p "Public domain: " DOMAIN; fi
-    if [[ -z "$EMAIL" ]]; then read -r -p "ACME email: " EMAIL; fi
+    if [[ -z "$DOMAIN" ]]; then read -r -p "Публичный домен: " DOMAIN; fi
+    if [[ -z "$EMAIL" ]]; then read -r -p "Email для ACME: " EMAIL; fi
   fi
-  valid_domain "$DOMAIN" || die "Invalid domain: $DOMAIN"
-  valid_email "$EMAIL" || die "Invalid email: $EMAIL"
-  valid_port "$SSH_PORT" || die "Invalid SSH port: $SSH_PORT"
-  [[ "$TELEMT_VERSION" =~ ^[A-Za-z0-9._-]+$ ]] || die "Invalid Telemt version"
+  valid_domain "$DOMAIN" || die "Недопустимый домен: $DOMAIN"
+  valid_email "$EMAIL" || die "Недопустимый email: $EMAIL"
+  valid_port "$SSH_PORT" || die "Недопустимый SSH-порт: $SSH_PORT"
+  [[ "$TELEMT_VERSION" =~ ^[A-Za-z0-9._-]+$ ]] || die "Недопустимая версия Telemt"
 }
 
 install_packages() {
   export DEBIAN_FRONTEND=noninteractive
-  log "Installing base dependencies"
+  log "Установка базовых зависимостей"
   apt-get update -qq
   apt-get install -y -qq ca-certificates curl openssl tar gzip coreutils ufw gnupg debian-keyring debian-archive-keyring apt-transport-https
   if ! apt-cache show caddy >/dev/null 2>&1; then
-    log "Adding the official Caddy repository"
+    log "Добавление официального репозитория Caddy"
     install -d -m 0755 /usr/share/keyrings
     curl -fsSL https://dl.cloudsmith.io/public/caddy/stable/gpg.key \
       | gpg --dearmor --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
@@ -137,40 +137,40 @@ check_existing_install() {
     [[ -e "$TELEMT_CONFIG_DIR" ]] && cp -a "$TELEMT_CONFIG_DIR" "$backup_dir/telemt-config"
     [[ -e "$CADDYFILE" ]] && cp -a "$CADDYFILE" "$backup_dir/Caddyfile"
     [[ -e "/etc/systemd/system/$TELEMT_SERVICE" ]] && cp -a "/etc/systemd/system/$TELEMT_SERVICE" "$backup_dir/telemt.service"
-    log "Existing files backed up to $backup_dir"
+    log "Существующие файлы сохранены в $backup_dir"
     return
   fi
   if [[ -e "$TELEMT_CONFIG" || -e "$CADDYFILE" || -e "/etc/systemd/system/$TELEMT_SERVICE" ]]; then
-    die "An existing Telemt/Caddy configuration was found. Use --force only after taking responsibility for replacement."
+    die "Найдена существующая конфигурация Telemt/Caddy. Для замены используйте --force осознанно."
   fi
 }
 
 detect_public_ip() {
   if [[ -n "$PUBLIC_IP" ]]; then
-    [[ "$PUBLIC_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || die "--public-ip must be IPv4"
+    [[ "$PUBLIC_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || die "--public-ip должен быть IPv4"
     return
   fi
   PUBLIC_IP="$(curl -4fsS --max-time 8 https://api.ipify.org || true)"
-  [[ "$PUBLIC_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || die "Could not detect public IPv4; use --public-ip"
+  [[ "$PUBLIC_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || die "Не удалось определить публичный IPv4; используйте --public-ip"
 }
 
 check_dns() {
-  log "Checking DNS for $DOMAIN"
-  getent ahostsv4 "$DOMAIN" >/dev/null 2>&1 || warn "DNS does not currently resolve $DOMAIN; ACME may fail"
+  log "Проверка DNS для $DOMAIN"
+  getent ahostsv4 "$DOMAIN" >/dev/null 2>&1 || warn "Домен пока не разрешается через DNS; ACME может завершиться ошибкой"
   if getent ahostsv4 "$DOMAIN" | awk '{print $1}' | grep -qx "$PUBLIC_IP"; then
     return
   fi
-  warn "$DOMAIN does not resolve to detected public IP $PUBLIC_IP"
-  (( NON_INTERACTIVE )) && die "Fix DNS or pass the correct --public-ip"
-  read -r -p "Continue anyway? [y/N] " answer
-  [[ "$answer" == [yY] ]] || die "Aborted"
+  warn "$DOMAIN не указывает на определённый публичный IP $PUBLIC_IP"
+  (( NON_INTERACTIVE )) && die "Исправьте DNS или передайте правильный --public-ip"
+  read -r -p "Продолжить? [y/N] " answer
+  [[ "$answer" == [yY] ]] || die "Операция отменена"
 }
 
 check_ports() {
   local port
   for port in 80 443; do
     if ss -Hlt "sport = :$port" 2>/dev/null | grep -q .; then
-      die "TCP port $port is already in use"
+      die "TCP-порт $port уже занят"
     fi
   done
 }
@@ -189,7 +189,7 @@ install_telemt() {
   case "$(uname -m)" in
     x86_64|amd64) arch="x86_64" ;;
     aarch64|arm64) arch="aarch64" ;;
-    *) die "Unsupported architecture: $(uname -m)" ;;
+      *) die "Неподдерживаемая архитектура: $(uname -m)" ;;
   esac
   if [[ -e /lib/ld-musl-*.so.* ]] || grep -q '^ID=\("\)alpine\1' /etc/os-release 2>/dev/null; then
     libc="musl"
@@ -199,7 +199,7 @@ install_telemt() {
   if [[ "$TELEMT_VERSION" == latest ]]; then
     TELEMT_VERSION="$(curl -fsSL https://api.github.com/repos/$TELEMT_REPO/releases/latest \
       | awk -F'"' '/"tag_name"/ {print $4; exit}')"
-    [[ -n "$TELEMT_VERSION" ]] || die "Could not determine latest Telemt release"
+    [[ -n "$TELEMT_VERSION" ]] || die "Не удалось определить последний релиз Telemt"
   fi
   TELEMT_VERSION="${TELEMT_VERSION#v}"
   asset="telemt-${arch}-linux-${libc}.tar.gz"
@@ -207,12 +207,12 @@ install_telemt() {
   archive="$(mktemp)"
   checksum="$(mktemp)"
   trap 'rm -f "$archive" "$checksum"' RETURN
-  log "Downloading Telemt $TELEMT_VERSION ($arch/$libc)"
+  log "Загрузка Telemt $TELEMT_VERSION ($arch/$libc)"
   curl -fsSL --retry 3 "$base_url/$asset" -o "$archive"
   curl -fsSL --retry 3 "$base_url/$asset.sha256" -o "$checksum"
   expected="$(awk '{print $1; exit}' "$checksum")"
   actual="$(sha256sum "$archive" | awk '{print $1}')"
-  [[ "$expected" == "$actual" ]] || die "Telemt archive checksum mismatch"
+  [[ "$expected" == "$actual" ]] || die "Контрольная сумма архива Telemt не совпадает"
   extracted="$(mktemp -d)"
   tar -xzf "$archive" -C "$extracted"
   install -m 0755 "$(find "$extracted" -type f -name telemt -print -quit)" /usr/local/bin/telemt
@@ -227,9 +227,9 @@ generate_secrets() {
 write_site() {
   cat > "$TELEMT_SITE_DIR/index.html" <<EOF
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Welcome</title><link rel="stylesheet" href="/styles.css"></head>
-<body><main><p class="eyebrow">$DOMAIN</p><h1>Welcome</h1><p>This site is under construction.</p></main></body></html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Добро пожаловать</title><link rel="stylesheet" href="/styles.css"></head>
+<body><main><p class="eyebrow">$DOMAIN</p><h1>Добро пожаловать</h1><p>Сайт находится в разработке.</p></main></body></html>
 EOF
   cat > "$TELEMT_SITE_DIR/styles.css" <<'EOF'
 :root{font-family:system-ui,sans-serif;color:#202124;background:#f7f8fa}body{margin:0;min-height:100vh;display:grid;place-items:center}main{max-width:38rem;padding:3rem}.eyebrow{color:#68707d;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase}h1{font-size:clamp(2.5rem,8vw,5rem);margin:.2em 0}p{line-height:1.6;color:#59616d}
@@ -381,31 +381,34 @@ start_services() {
   systemctl daemon-reload
   systemctl enable --now "$TELEMT_SERVICE"
   systemctl enable --now "$CADDY_SERVICE"
-  systemctl is-active --quiet "$TELEMT_SERVICE" || { journalctl -u "$TELEMT_SERVICE" -n 40 --no-pager; die "Telemt failed to start"; }
-  systemctl is-active --quiet "$CADDY_SERVICE" || { journalctl -u "$CADDY_SERVICE" -n 40 --no-pager; die "Caddy failed to start"; }
+  systemctl is-active --quiet "$TELEMT_SERVICE" || { journalctl -u "$TELEMT_SERVICE" -n 40 --no-pager; die "Telemt не запустился"; }
+  systemctl is-active --quiet "$CADDY_SERVICE" || { journalctl -u "$CADDY_SERVICE" -n 40 --no-pager; die "Caddy не запустился"; }
 }
 
 print_result() {
   local secret_file="/root/telemt-web-credentials-$DOMAIN.txt"
   umask 077
   cat > "$secret_file" <<EOF
-Telemt WEB installation
-Domain: $DOMAIN
-Public address: $PUBLIC_IP:443
-Secret mode: dd
-Secret: $PROXY_SECRET
-WEB link (Telegram Desktop WEB proxy): tg://webproxy?server=$DOMAIN&secret=dd$PROXY_SECRET
-API token: $API_TOKEN
+Установка Telemt WEB
+Домен: $DOMAIN
+Публичный адрес: $PUBLIC_IP:443
+Режим секрета: dd
+Секрет: $PROXY_SECRET
+WEB-ссылка (Telegram Desktop WEB proxy): tg://webproxy?server=$DOMAIN&secret=dd$PROXY_SECRET
+API-токен: $API_TOKEN
 EOF
   chmod 0600 "$secret_file"
   cat <<EOF
 
-Domain: $DOMAIN
-Telemt version: $TELEMT_VERSION
-Credentials: $secret_file
+Домен: $DOMAIN
+Версия Telemt: $TELEMT_VERSION
+Файл с реквизитами: $secret_file
 
+Проверка сервисов:
   systemctl status telemt caddy
   journalctl -u telemt -f
+
+WEB listener закрыт на loopback: $TELEMT_LISTEN; снаружи Caddy принимает TCP 80/443.
 
 EOF
 }
