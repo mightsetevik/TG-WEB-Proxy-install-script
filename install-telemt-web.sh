@@ -105,8 +105,16 @@ prompt_values() {
     [[ -n "$DOMAIN" && -n "$EMAIL" ]] || die "В --non-interactive обязательны --domain и --email"
   else
     [[ -r /dev/tty ]] || die "Интерактивный режим требует TTY; используйте --domain и --email"
-    if [[ -z "$DOMAIN" ]]; then read -r -p "Публичный домен: " DOMAIN </dev/tty; fi
-    if [[ -z "$EMAIL" ]]; then read -r -p "Email для ACME: " EMAIL </dev/tty; fi
+    if [[ -z "$DOMAIN" ]]; then
+      printf 'Публичный домен: ' >/dev/tty
+      IFS= read -r DOMAIN </dev/tty
+      printf '\n' >/dev/tty
+    fi
+    if [[ -z "$EMAIL" ]]; then
+      printf 'Email для ACME: ' >/dev/tty
+      IFS= read -r EMAIL </dev/tty
+      printf '\n' >/dev/tty
+    fi
   fi
   valid_domain "$DOMAIN" || die "Недопустимый домен: $DOMAIN"
   valid_email "$EMAIL" || die "Недопустимый email: $EMAIL"
